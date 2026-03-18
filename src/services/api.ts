@@ -1,7 +1,13 @@
-// Backend URL — localhost для разработки, потом заменим на реальный
-const API_URL = "http://138.124.89.183:8000";
+// ═══════════════════════════════════
+// VoidDrop API Service
+// ═══════════════════════════════════
 
-// Получить Telegram user ID из WebApp SDK
+const API_URL = "https://api.voiddrop.space";
+
+// ═══════════════════════════════════
+// TELEGRAM
+// ═══════════════════════════════════
+
 export function getTelegramUserId(): string | null {
   try {
     const tg = (window as any).Telegram?.WebApp;
@@ -12,14 +18,22 @@ export function getTelegramUserId(): string | null {
   return null;
 }
 
-export async function getPortfolioByTelegram(): Promise<any> {
-  const telegramId = getTelegramUserId();
-  if (!telegramId) {
-    return { success: false, error: "Not in Telegram" };
-  }
-  const data = await fetchAPI(`/api/portfolio/tg?telegram_id=${telegramId}`);
-  return data;
+export function getTelegramUser(): { id: string; firstName: string } | null {
+  try {
+    const tg = (window as any).Telegram?.WebApp;
+    if (tg?.initDataUnsafe?.user) {
+      return {
+        id: String(tg.initDataUnsafe.user.id),
+        firstName: tg.initDataUnsafe.user.first_name || "Explorer",
+      };
+    }
+  } catch (_) {}
+  return null;
 }
+
+// ═══════════════════════════════════
+// BASE FETCH
+// ═══════════════════════════════════
 
 export async function fetchAPI(path: string) {
   try {
@@ -79,9 +93,18 @@ export async function getPacificaStats(): Promise<PacificaStats | null> {
 // ═══════════════════════════════════
 
 export interface PortfolioData {
+  wallet: string;
+  wallet_short: string;
   positions: any[];
   orders: any[];
-  settings: any;
+}
+
+export async function getPortfolioByTelegram(): Promise<PortfolioData | null> {
+  const telegramId = getTelegramUserId();
+  if (!telegramId) return null;
+  const data = await fetchAPI(`/api/portfolio/tg?telegram_id=${telegramId}`);
+  if (data.success) return data.data;
+  return null;
 }
 
 export async function getPortfolio(account: string): Promise<PortfolioData | null> {

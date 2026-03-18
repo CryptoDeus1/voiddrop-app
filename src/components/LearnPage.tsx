@@ -315,10 +315,10 @@ export function LearnPage() {
             <div className="flex items-center gap-2">
               <BookOpen className="h-4 w-4 text-violet-400" />
               <h1 className="text-[18px] font-extrabold tracking-tight text-white">
-                Airdrop Academy 📚
-              </h1>
+                 Void Academy 📚
+               </h1>
             </div>
-            <p className="text-[11px] text-zinc-500 mt-0.5">Web3 learning hub for farmers</p>
+            <p className="text-[11px] text-zinc-500 mt-0.5">Explore the Void. Learn to Survive.</p>
           </div>
           <div className="flex items-center gap-1.5 rounded-2xl px-2.5 py-1.5"
             style={{ background: "rgba(245,158,11,0.12)", border: "1px solid rgba(245,158,11,0.22)" }}>
