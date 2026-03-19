@@ -10,7 +10,7 @@ interface PacificaStats {
   status: string;
 }
 
-const API_URL = "https://api.voiddrop.space";
+const API_URL ="https://api.voiddrop.space/api/pacifica/stats";
 
 export function PacificaBanner() {
   const [stats, setStats] = useState<PacificaStats | null>(null);
