@@ -83,8 +83,8 @@ export function DropHuntPage() {
             <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-emerald-400 ring-2 ring-zinc-950" />
           </div>
           <div className="leading-none">
-            <span className="block text-[13px] font-bold tracking-tight text-white">AirdropHub</span>
-            <span className="block text-[9px] font-semibold uppercase tracking-[0.15em] text-violet-400">Assistant</span>
+            <span className="block text-[13px] font-bold tracking-tight text-white">VoidDrop</span>
+            <span className="block text-[9px] font-semibold uppercase tracking-[0.15em] text-violet-400">Explore the Void. Claim the drops.</span>
           </div>
         </div>
 

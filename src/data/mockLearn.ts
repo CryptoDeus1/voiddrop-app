@@ -391,9 +391,12 @@ export const VIDEO_LESSONS: VideoLesson[] = [
 /* ── Learning Path / Progress ────────────────────────────────────────── */
 export const LEARNING_PATH = {
   currentModule: "Anti-Sybil Fundamentals",
+  currentPath: "Anti-Sybil Fundamentals",
   modulesCompleted: 3,
   totalModules: 8,
   xpEarned: 185,
+  totalXP: 185,
   nextLesson: "Understanding Clustering Algorithms",
   streak: 4,
+  streakDays: 4,
 };
