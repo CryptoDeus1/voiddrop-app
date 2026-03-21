@@ -175,3 +175,78 @@ export async function getTradeHistory(): Promise<TradeHistoryData | null> {
   if (data.success) return data.data;
   return null;
 }
+
+// ═══════════════════════════════════
+// TRADE HISTORY & STATS
+// ═══════════════════════════════════
+
+export interface TradeStats {
+  total_trades: number;
+  wins: number;
+  losses: number;
+  win_rate: number;
+  total_pnl: number;
+  edge: number;
+  best_trade: ClosedTrade | null;
+  worst_trade: ClosedTrade | null;
+}
+
+export interface ClosedTrade {
+  symbol: string;
+  side: string;
+  amount: string;
+  entry_price: string;
+  close_price: string;
+  pnl: number;
+  win: boolean;
+  opened_at: number;
+  closed_at: number;
+}
+
+export interface TradeHistoryData {
+  stats: TradeStats;
+  open: any[];
+  closed: ClosedTrade[];
+}
+
+export async function getTradeHistory(): Promise<TradeHistoryData | null> {
+  const telegramId = getTelegramUserId();
+  if (!telegramId) return null;
+  const data = await fetchAPI(`/api/trades/history?telegram_id=${telegramId}`);
+  if (data.success) return data.data;
+  return null;
+}
+
+// ═══════════════════════════════════
+// CLOSE POSITIONS
+// ═══════════════════════════════════
+
+export async function closePosition(symbol: string): Promise<{ success: boolean; error?: string }> {
+  const telegramId = getTelegramUserId();
+  if (!telegramId) return { success: false, error: "No telegram ID" };
+
+  try {
+    const response = await fetch(
+      `${API_URL}/api/trades/close?telegram_id=${telegramId}&symbol=${symbol}`,
+      { method: "POST" }
+    );
+    return await response.json();
+  } catch (error) {
+    return { success: false, error: String(error) };
+  }
+}
+
+export async function closeAllPositions(): Promise<{ success: boolean; error?: string }> {
+  const telegramId = getTelegramUserId();
+  if (!telegramId) return { success: false, error: "No telegram ID" };
+
+  try {
+    const response = await fetch(
+      `${API_URL}/api/trades/close-all?telegram_id=${telegramId}`,
+      { method: "POST" }
+    );
+    return await response.json();
+  } catch (error) {
+    return { success: false, error: String(error) };
+  }
+}
