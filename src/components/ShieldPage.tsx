@@ -4,7 +4,7 @@ import {
   Fingerprint, Activity, Globe, Layers,
   ChevronDown, ChevronUp, Zap, Eye,
 } from "lucide-react";
-import { getTelegramUserId, getPortfolioByTelegram } from "../services/api";
+import type { WalletState } from "../hooks/useWallet";
 
 /* ── Shield Ring SVG ─────────────────────────────────── */
 function ShieldRing({ score, max }: { score: number; max: number }) {
@@ -26,7 +26,6 @@ function ShieldRing({ score, max }: { score: number; max: number }) {
 
   return (
     <div className="relative flex items-center justify-center">
-      {/* Outer glow */}
       <div
         className="absolute rounded-full blur-xl opacity-40"
         style={{
@@ -35,7 +34,6 @@ function ShieldRing({ score, max }: { score: number; max: number }) {
           background: `radial-gradient(circle, ${color.main}, transparent)`,
         }}
       />
-      {/* Shield layers */}
       {[0.85, 0.7, 0.55].map((scale, i) => (
         <div
           key={i}
@@ -145,10 +143,8 @@ function ScoreBar({ label, score, max, icon, color, description }: {
 }
 
 /* ══════════════════════════════════════════════════════
-   MAIN — ShieldPage
+   Mock Sybil Data
 ══════════════════════════════════════════════════════ */
-
-// Mock Sybil Analysis
 const SYBIL_DATA = {
   totalScore: 82,
   maxScore: 100,
@@ -196,22 +192,22 @@ const SYBIL_DATA = {
     { emoji: "🌐", text: "Use multiple chains, not just one", status: "warning" },
     { emoji: "💰", text: "Vary transaction sizes significantly", status: "good" },
   ],
-  shields: 4, // out of 5
+  shields: 4,
 };
 
-export function ShieldPage() {
+/* ══════════════════════════════════════════════════════
+   MAIN — ShieldPage
+══════════════════════════════════════════════════════ */
+interface ShieldPageProps {
+  wallet: WalletState;
+}
+
+export function ShieldPage({ wallet }: ShieldPageProps) {
   const [expanded, setExpanded] = useState(false);
   const [animateIn, setAnimateIn] = useState(false);
-  const [walletConnected, setWalletConnected] = useState(false);
 
   useEffect(() => {
     setTimeout(() => setAnimateIn(true), 100);
-    const tgId = getTelegramUserId();
-    if (tgId) {
-      getPortfolioByTelegram().then((data) => {
-        if (data?.wallet) setWalletConnected(true);
-      });
-    }
   }, []);
 
   const data = SYBIL_DATA;
@@ -240,7 +236,6 @@ export function ShieldPage() {
             </p>
           </div>
 
-          {/* Shield power indicator */}
           <div className="flex items-center gap-1">
             {[1, 2, 3, 4, 5].map((i) => (
               <div
@@ -405,18 +400,18 @@ export function ShieldPage() {
         <div
           className="rounded-2xl p-4 text-center"
           style={{
-            background: walletConnected
+            background: wallet.isConnected
               ? "rgba(16,185,129,0.06)"
               : "rgba(255,255,255,0.03)",
-            border: `1px solid ${walletConnected
+            border: `1px solid ${wallet.isConnected
               ? "rgba(16,185,129,0.15)"
               : "rgba(255,255,255,0.07)"}`,
           }}
         >
-          {walletConnected ? (
+          {wallet.isConnected ? (
             <>
               <CheckCircle2 className="h-5 w-5 text-emerald-400 mx-auto mb-2" />
-              <p className="text-[12px] font-bold text-emerald-400">Wallet Linked via VoidDrop Bot</p>
+              <p className="text-[12px] font-bold text-emerald-400">Wallet Linked — {wallet.walletShort}</p>
               <p className="text-[10px] text-zinc-600 mt-1">Shield analysis based on your on-chain data</p>
             </>
           ) : (

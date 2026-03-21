@@ -4,7 +4,8 @@ import {
   Anchor, ArrowUpRight, ArrowDownRight, RefreshCw,
   AlertTriangle, Eye, BarChart3, Flame,
 } from "lucide-react";
-import { getTopMarkets, getPacificaStats, getPortfolioByTelegram, type MarketData, type PacificaStats } from "../services/api";
+import { getTopMarkets, getPacificaStats, type MarketData, type PacificaStats } from "../services/api";
+import type { WalletState } from "../hooks/useWallet";
 
 /* ── Pilot Rank System ─────────────────────────────────── */
 const RANKS = [
@@ -110,10 +111,9 @@ function PositionCard({ position, currentPrice }: { position: any; currentPrice:
       <div className="absolute inset-x-0 top-0 h-px"
         style={{ background: `linear-gradient(90deg, transparent, ${isProfit ? "rgba(16,185,129,0.6)" : "rgba(239,68,68,0.6)"}, transparent)` }} />
 
-      {/* Header */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
-          <span className={`text-[20px]`}>{isProfit ? "🚀" : "☄️"}</span>
+          <span className="text-[20px]">{isProfit ? "🚀" : "☄️"}</span>
           <div>
             <div className="flex items-center gap-2">
               <span className="text-[15px] font-extrabold text-white">{position.symbol}</span>
@@ -132,7 +132,6 @@ function PositionCard({ position, currentPrice }: { position: any; currentPrice:
           </div>
         </div>
 
-        {/* PnL Display */}
         <div className="text-right">
           <p className={`text-[18px] font-black ${isProfit ? "text-emerald-400" : "text-red-400"}`}>
             {isProfit ? "+" : ""}{pnlPct.toFixed(2)}%
@@ -143,7 +142,6 @@ function PositionCard({ position, currentPrice }: { position: any; currentPrice:
         </div>
       </div>
 
-      {/* Price bar */}
       <div className="flex items-center gap-2 mb-2">
         <div className="flex-1">
           <div className="flex justify-between text-[10px] text-zinc-600 mb-1">
@@ -166,7 +164,6 @@ function PositionCard({ position, currentPrice }: { position: any; currentPrice:
         </div>
       </div>
 
-      {/* Flight status */}
       <div
         className="flex items-center justify-center gap-2 rounded-xl py-1.5 text-[11px] font-bold"
         style={{
@@ -237,36 +234,37 @@ function FundingMonitor({ markets }: { markets: MarketData[] }) {
 /* ══════════════════════════════════════════════════════════
    MAIN — VoidTerminal
 ══════════════════════════════════════════════════════════ */
-export function VoidTerminal() {
+interface VoidTerminalProps {
+  wallet: WalletState;
+}
+
+export function VoidTerminal({ wallet }: VoidTerminalProps) {
   const [markets, setMarkets] = useState<MarketData[]>([]);
   const [stats, setStats] = useState<PacificaStats | null>(null);
-  const [portfolio, setPortfolio] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState<string>("");
 
-  const fetchAll = async () => {
-    const [m, s, p] = await Promise.all([
+  const fetchMarketData = async () => {
+    const [m, s] = await Promise.all([
       getTopMarkets(),
       getPacificaStats(),
-      getPortfolioByTelegram(),
     ]);
     setMarkets(m);
     setStats(s);
-    setPortfolio(p);
     setLoading(false);
     setLastUpdate(new Date().toLocaleTimeString());
   };
 
   useEffect(() => {
-    fetchAll();
-    const interval = setInterval(fetchAll, 15000);
+    fetchMarketData();
+    const interval = setInterval(fetchMarketData, 15000);
     return () => clearInterval(interval);
   }, []);
 
-  const positions = portfolio?.positions || [];
+  /* Берём позиции из общего wallet state — не дублируем запрос */
+  const positions = wallet.portfolio?.positions || [];
   const rank = getRank(positions.length);
 
-  // Get current prices for positions
   const priceMap: Record<string, number> = {};
   markets.forEach((m) => { priceMap[m.symbol] = Number(m.price); });
 
@@ -301,7 +299,6 @@ export function VoidTerminal() {
             </div>
           </div>
 
-          {/* Rank badge */}
           <div
             className="flex items-center gap-1.5 rounded-2xl px-3 py-1.5"
             style={{ background: `${rank.color}15`, border: `1px solid ${rank.color}30` }}
@@ -315,7 +312,7 @@ export function VoidTerminal() {
       {/* ══ Scrollable Body ═════════════════════════════════════ */}
       <div className="flex flex-col gap-4 px-4 pb-nav pt-4">
 
-        {/* ── Quick Stats ──────────────────────────────────── */}
+                {/* ── Quick Stats ──────────────────────────────────── */}
         <div className="grid grid-cols-3 gap-2">
           <div
             className="flex flex-col items-center gap-1 rounded-2xl py-3"
@@ -343,6 +340,73 @@ export function VoidTerminal() {
           </div>
         </div>
 
+        {/* ── Trade Stats (if has history) ─────────────────── */}
+        {wallet.tradeHistory?.stats && wallet.tradeHistory.stats.total_trades > 0 && (
+          <div
+            className="rounded-2xl p-4"
+            style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}
+          >
+            <div className="flex items-center gap-2 mb-3">
+              <TrendingUp className="h-4 w-4 text-emerald-400" />
+              <p className="text-[12px] font-bold text-white">Trading Stats</p>
+              <span className="text-[10px] text-zinc-600">
+                {wallet.tradeHistory.stats.total_trades} trades
+              </span>
+            </div>
+
+            <div className="grid grid-cols-3 gap-3">
+              {/* Win Rate */}
+              <div className="text-center">
+                <p className={`text-[18px] font-black ${
+                  wallet.tradeHistory.stats.win_rate >= 50 ? "text-emerald-400" : "text-red-400"
+                }`}>
+                  {wallet.tradeHistory.stats.win_rate}%
+                </p>
+                <p className="text-[9px] font-semibold uppercase tracking-wider text-zinc-600">Win Rate</p>
+                <p className="text-[10px] text-zinc-500">
+                  {wallet.tradeHistory.stats.wins}W / {wallet.tradeHistory.stats.losses}L
+                </p>
+              </div>
+
+              {/* Total PnL */}
+              <div className="text-center">
+                <p className={`text-[18px] font-black ${
+                  wallet.tradeHistory.stats.total_pnl >= 0 ? "text-emerald-400" : "text-red-400"
+                }`}>
+                  {wallet.tradeHistory.stats.total_pnl >= 0 ? "+" : ""}${wallet.tradeHistory.stats.total_pnl.toFixed(2)}
+                </p>
+                <p className="text-[9px] font-semibold uppercase tracking-wider text-zinc-600">Total P&L</p>
+              </div>
+
+              {/* Edge */}
+              <div className="text-center">
+                <p className={`text-[18px] font-black ${
+                  wallet.tradeHistory.stats.edge >= 0 ? "text-emerald-400" : "text-red-400"
+                }`}>
+                  {wallet.tradeHistory.stats.edge >= 0 ? "+" : ""}${wallet.tradeHistory.stats.edge.toFixed(2)}
+                </p>
+                <p className="text-[9px] font-semibold uppercase tracking-wider text-zinc-600">Edge</p>
+              </div>
+            </div>
+
+            {/* Win rate bar */}
+            <div className="mt-3 h-2 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.07)" }}>
+              <div
+                className="h-full rounded-full transition-all duration-1000"
+                style={{
+                  width: `${wallet.tradeHistory.stats.win_rate}%`,
+                  background: wallet.tradeHistory.stats.win_rate >= 50
+                    ? "linear-gradient(90deg, #059669, #10b981, #34d399)"
+                    : "linear-gradient(90deg, #dc2626, #ef4444, #f87171)",
+                  boxShadow: `0 0 8px ${wallet.tradeHistory.stats.win_rate >= 50
+                    ? "rgba(16,185,129,0.5)"
+                    : "rgba(239,68,68,0.5)"}`,
+                }}
+              />
+            </div>
+          </div>
+        )}
+
         {/* ── Live Prices ──────────────────────────────────── */}
         <div>
           <div className="flex items-center justify-between mb-2">
@@ -351,7 +415,7 @@ export function VoidTerminal() {
               <p className="text-[11px] font-semibold uppercase tracking-widest text-zinc-600">Live Markets</p>
             </div>
             <button
-              onClick={fetchAll}
+              onClick={fetchMarketData}
               className="flex items-center gap-1 text-[10px] text-sky-400 font-semibold active:scale-95 transition-all"
             >
               <RefreshCw className="h-3 w-3" /> {lastUpdate}

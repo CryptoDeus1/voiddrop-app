@@ -1,3 +1,4 @@
+// src/App.tsx
 import { useState, useEffect } from "react";
 import { BottomNav, type TabId } from "./components/BottomNav";
 import { DropHuntPage }    from "./components/DropHuntPage";
@@ -5,9 +6,11 @@ import { VoidTerminal }    from "./components/VoidTerminal";
 import { SchedulePage }    from "./components/SchedulePage";
 import { ShieldPage }      from "./components/ShieldPage";
 import { LearnPage }       from "./components/LearnPage";
+import { useWallet }       from "./hooks/useWallet";
 
 export function App() {
   const [activeTab, setActiveTab] = useState<TabId>("drophunt");
+  const wallet = useWallet();
 
   useEffect(() => {
     try {
@@ -31,14 +34,18 @@ export function App() {
       </div>
 
       <div className="relative z-10 flex-1 overflow-hidden">
-        {activeTab === "drophunt"  && <DropHuntPage  />}
-        {activeTab === "terminal"  && <VoidTerminal  />}
+        {activeTab === "drophunt"  && <DropHuntPage  wallet={wallet} />}
+        {activeTab === "terminal"  && <VoidTerminal  wallet={wallet} />}
         {activeTab === "schedule"  && <SchedulePage  />}
-        {activeTab === "shield"    && <ShieldPage    />}
+        {activeTab === "shield"    && <ShieldPage    wallet={wallet} />}
         {activeTab === "education" && <LearnPage     />}
       </div>
 
-      <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
+      <BottomNav
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        positionsCount={wallet.positionsCount}
+      />
     </div>
   );
 }

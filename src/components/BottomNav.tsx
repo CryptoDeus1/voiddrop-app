@@ -1,3 +1,4 @@
+// src/components/BottomNav.tsx
 import { Crosshair, CalendarDays, Radar, Shield, GraduationCap } from "lucide-react";
 
 export type TabId = "drophunt" | "terminal" | "schedule" | "shield" | "education";
@@ -6,10 +7,11 @@ const NAV_ITEMS: {
   id: TabId;
   label: string;
   icon: React.ElementType;
-  badge?: string;
+  badge?: string;        // статичный бейдж
+  badgeKey?: string;     // динамический из пропсов
 }[] = [
   { id: "drophunt",  label: "DropHunt",  icon: Crosshair,     badge: "9" },
-  { id: "terminal",  label: "Terminal",  icon: Radar                     },
+  { id: "terminal",  label: "Terminal",  icon: Radar,          badgeKey: "positions" },
   { id: "schedule",  label: "Schedule",  icon: CalendarDays              },
   { id: "shield",    label: "Shield",    icon: Shield                    },
   { id: "education", label: "Learn",     icon: GraduationCap, badge: "3" },
@@ -18,9 +20,10 @@ const NAV_ITEMS: {
 interface BottomNavProps {
   activeTab: TabId;
   onTabChange: (id: TabId) => void;
+  positionsCount?: number;
 }
 
-export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
+export function BottomNav({ activeTab, onTabChange, positionsCount = 0 }: BottomNavProps) {
   return (
     <nav
       className="fixed bottom-0 inset-x-0 z-50 pb-safe"
@@ -32,6 +35,16 @@ export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
         {NAV_ITEMS.map((item) => {
           const isActive = activeTab === item.id;
           const isTerminal = item.id === "terminal";
+
+          // Определяем бейдж: динамический или статичный
+          const badge = item.badgeKey === "positions"
+            ? (positionsCount > 0 ? String(positionsCount) : undefined)
+            : item.badge;
+
+          // Цвет бейджа для Terminal — sky, для остальных — violet
+          const badgeBg = isTerminal && positionsCount > 0
+            ? "bg-sky-500"
+            : "bg-violet-500";
 
           return (
             <button
@@ -79,12 +92,12 @@ export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
                   }}
                 />
 
-                {item.badge && (
+                {badge && (
                   <span
-                    className="absolute -right-1 -top-1 flex items-center justify-center rounded-full bg-violet-500 text-white font-bold"
+                    className={`absolute -right-1 -top-1 flex items-center justify-center rounded-full ${badgeBg} text-white font-bold`}
                     style={{ fontSize: 9, minWidth: 16, height: 16, padding: "0 4px" }}
                   >
-                    {item.badge}
+                    {badge}
                   </span>
                 )}
               </div>
