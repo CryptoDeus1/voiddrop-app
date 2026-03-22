@@ -26,22 +26,31 @@ export function App() {
     } catch (_) {}
   }, []);
 
-  // Убираем сплэш когда wallet загрузился
+  // Сплэш: ждём загрузки + минимум 1.2 сек + 0.5 сек fade
   useEffect(() => {
     if (wallet.isLoaded) {
-      // Минимум 1 секунда показываем сплэш (чтобы не мигало)
-      const timer = setTimeout(() => setShowSplash(false), 1000);
+      const timer = setTimeout(() => setShowSplash(false), 1700);
       return () => clearTimeout(timer);
     }
   }, [wallet.isLoaded]);
 
-  // Показываем сплэш пока загружается
-  if (showSplash) {
-    return <SplashScreen />;
-  }
-
   return (
     <div className="fixed inset-0 flex flex-col bg-zinc-950 text-zinc-100 antialiased overflow-hidden">
+
+      {showSplash && (
+        <div
+          className="fixed inset-0 z-[100]"
+          style={{
+            opacity: wallet.isLoaded ? 0 : 1,
+            transition: "opacity 0.5s ease-out",
+            transitionDelay: wallet.isLoaded ? "1.2s" : "0s",
+            pointerEvents: wallet.isLoaded ? "none" : "auto",
+          }}
+        >
+          <SplashScreen />
+        </div>
+      )}
+
       <div className="pointer-events-none fixed inset-0 overflow-hidden z-0" aria-hidden>
         <div className="absolute -left-24 -top-24 h-72 w-72 rounded-full bg-violet-600/[0.10] blur-[80px]" />
         <div className="absolute -right-20 top-16  h-64 w-64 rounded-full bg-indigo-600/[0.08] blur-[70px]" />
