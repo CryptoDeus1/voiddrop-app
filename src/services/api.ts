@@ -177,47 +177,6 @@ export async function getTradeHistory(): Promise<TradeHistoryData | null> {
 }
 
 // ═══════════════════════════════════
-// TRADE HISTORY & STATS
-// ═══════════════════════════════════
-
-export interface TradeStats {
-  total_trades: number;
-  wins: number;
-  losses: number;
-  win_rate: number;
-  total_pnl: number;
-  edge: number;
-  best_trade: ClosedTrade | null;
-  worst_trade: ClosedTrade | null;
-}
-
-export interface ClosedTrade {
-  symbol: string;
-  side: string;
-  amount: string;
-  entry_price: string;
-  close_price: string;
-  pnl: number;
-  win: boolean;
-  opened_at: number;
-  closed_at: number;
-}
-
-export interface TradeHistoryData {
-  stats: TradeStats;
-  open: any[];
-  closed: ClosedTrade[];
-}
-
-export async function getTradeHistory(): Promise<TradeHistoryData | null> {
-  const telegramId = getTelegramUserId();
-  if (!telegramId) return null;
-  const data = await fetchAPI(`/api/trades/history?telegram_id=${telegramId}`);
-  if (data.success) return data.data;
-  return null;
-}
-
-// ═══════════════════════════════════
 // CLOSE POSITIONS
 // ═══════════════════════════════════
 
@@ -249,4 +208,45 @@ export async function closeAllPositions(): Promise<{ success: boolean; error?: s
   } catch (error) {
     return { success: false, error: String(error) };
   }
+}
+
+// ═══════════════════════════════════
+// DROPS FROM BACKEND
+// ═══════════════════════════════════
+
+export interface LiveDrop {
+  id: number;
+  name: string;
+  ticker: string;
+  emoji: string;
+  gradientFrom: string;
+  gradientTo: string;
+  glowColor: string;
+  type: string;
+  funding: string;
+  probability: string;
+  category: string;
+  description: string;
+  reward: string;
+  endDate: string;
+  chain: string;
+  project_url: string;
+  hot: boolean;
+  new: boolean;
+  tasks: {
+    id: number;
+    title: string;
+    description: string;
+    url: string;
+    difficulty: string;
+    xp: number;
+    completed: boolean;
+  }[];
+  added_at: number;
+}
+
+export async function getLiveDrops(): Promise<LiveDrop[]> {
+  const data = await fetchAPI("/api/drops/list");
+  if (data.success) return data.data;
+  return [];
 }
