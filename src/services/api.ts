@@ -250,3 +250,35 @@ export async function getLiveDrops(): Promise<LiveDrop[]> {
   if (data.success) return data.data;
   return [];
 }
+
+// ═══════════════════════════════════
+// TASK COMPLETION
+// ═══════════════════════════════════
+
+export async function completeTask(dropId: number, taskId: number): Promise<{
+  success: boolean;
+  data?: { completed: number; total: number; xp_earned: number };
+  error?: string;
+}> {
+  const telegramId = getTelegramUserId();
+  if (!telegramId) return { success: false, error: "No telegram ID" };
+
+  try {
+    const response = await fetch(
+      `${API_URL}/api/drops/${dropId}/tasks/${taskId}/complete?telegram_id=${telegramId}`,
+      { method: "POST" }
+    );
+    return await response.json();
+  } catch (error) {
+    return { success: false, error: String(error) };
+  }
+}
+
+export async function getUserProgress(): Promise<Record<string, number[]>> {
+  const telegramId = getTelegramUserId();
+  if (!telegramId) return {};
+
+  const data = await fetchAPI(`/api/drops/progress?telegram_id=${telegramId}`);
+  if (data.success) return data.data;
+  return {};
+}
