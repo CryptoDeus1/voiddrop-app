@@ -1,4 +1,3 @@
-// src/App.tsx
 import { useState, useEffect } from "react";
 import { BottomNav, type TabId } from "./components/BottomNav";
 import { DropHuntPage }    from "./components/DropHuntPage";
@@ -6,10 +5,12 @@ import { VoidTerminal }    from "./components/VoidTerminal";
 import { SchedulePage }    from "./components/SchedulePage";
 import { ShieldPage }      from "./components/ShieldPage";
 import { LearnPage }       from "./components/LearnPage";
+import { SplashScreen }    from "./components/SplashScreen";
 import { useWallet }       from "./hooks/useWallet";
 
 export function App() {
   const [activeTab, setActiveTab] = useState<TabId>("drophunt");
+  const [showSplash, setShowSplash] = useState(true);
   const wallet = useWallet();
 
   useEffect(() => {
@@ -24,6 +25,20 @@ export function App() {
       }
     } catch (_) {}
   }, []);
+
+  // Убираем сплэш когда wallet загрузился
+  useEffect(() => {
+    if (wallet.isLoaded) {
+      // Минимум 1 секунда показываем сплэш (чтобы не мигало)
+      const timer = setTimeout(() => setShowSplash(false), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [wallet.isLoaded]);
+
+  // Показываем сплэш пока загружается
+  if (showSplash) {
+    return <SplashScreen />;
+  }
 
   return (
     <div className="fixed inset-0 flex flex-col bg-zinc-950 text-zinc-100 antialiased overflow-hidden">
