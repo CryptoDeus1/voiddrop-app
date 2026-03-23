@@ -282,3 +282,43 @@ export async function getUserProgress(): Promise<Record<string, number[]>> {
   if (data.success) return data.data;
   return {};
 }
+
+// ═══════════════════════════════════
+// SCHEDULE
+// ═══════════════════════════════════
+
+export interface ScheduleTaskLive {
+  id: string;
+  drop_id: number;
+  task_id: number;
+  title: string;
+  description: string;
+  url: string;
+  difficulty: string;
+  xp: number;
+  completed: boolean;
+  drop_name: string;
+  drop_emoji: string;
+  drop_chain: string;
+  gradient_from: string;
+  gradient_to: string;
+  glow: string;
+}
+
+export interface ScheduleData {
+  tasks: ScheduleTaskLive[];
+  stats: {
+    total: number;
+    completed: number;
+    total_xp: number;
+    streak: number;
+  };
+}
+
+export async function getSchedule(): Promise<ScheduleData | null> {
+  const telegramId = getTelegramUserId();
+  if (!telegramId) return null;
+  const data = await fetchAPI(`/api/schedule?telegram_id=${telegramId}`);
+  if (data.success) return data.data;
+  return null;
+}
