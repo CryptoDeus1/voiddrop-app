@@ -357,3 +357,47 @@ export async function getSybilScore(): Promise<SybilScoreData | null> {
   if (data.success) return data.data;
   return null;
 }
+
+// ═══════════════════════════════════
+// SCHEDULE GENERATION
+// ═══════════════════════════════════
+
+export interface ScheduleDay {
+  date: string;
+  day_short: string;
+  day_num: number;
+  month: string;
+  is_today: boolean;
+  tasks: ScheduleTaskLive[];
+}
+
+export interface GeneratedSchedule {
+  days: ScheduleDay[];
+  chains: string[] | string;
+  generated_at: number;
+  total_tasks: number;
+  days_count: number;
+  tasks_per_day: number;
+}
+
+export async function generateSchedule(
+  chains: string[],
+  days: number = 7,
+  tasksPerDay: number = 3
+): Promise<GeneratedSchedule | null> {
+  const telegramId = getTelegramUserId();
+  if (!telegramId) return null;
+
+  try {
+    const chainsStr = chains.join(",");
+    const response = await fetch(
+      `${API_URL}/api/schedule/generate?telegram_id=${telegramId}&chains=${chainsStr}&days=${days}&tasks_per_day=${tasksPerDay}`,
+      { method: "POST" }
+    );
+    const data = await response.json();
+    if (data.success) return data.data;
+  } catch (e) {
+    console.error("generateSchedule error:", e);
+  }
+  return null;
+}
