@@ -322,3 +322,38 @@ export async function getSchedule(): Promise<ScheduleData | null> {
   if (data.success) return data.data;
   return null;
 }
+
+// ═══════════════════════════════════
+// SYBIL SCORE
+// ═══════════════════════════════════
+
+export interface SybilScoreData {
+  total_score: number;
+  max_score: number;
+  grade: string;
+  risk_level: "LOW" | "MED" | "HIGH" | "CRITICAL";
+  breakdown: {
+    label: string;
+    score: number;
+    max: number;
+    description: string;
+  }[];
+  tips: {
+    emoji: string;
+    text: string;
+    status: "good" | "warning";
+  }[];
+  stats: {
+    total_trades: number;
+    tasks_completed: number;
+    drops_interacted: number;
+  };
+}
+
+export async function getSybilScore(): Promise<SybilScoreData | null> {
+  const telegramId = getTelegramUserId();
+  if (!telegramId) return null;
+  const data = await fetchAPI(`/api/sybil/score?telegram_id=${telegramId}`);
+  if (data.success) return data.data;
+  return null;
+}
