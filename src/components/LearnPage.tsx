@@ -396,7 +396,5 @@ export function LearnPage() {
         </div>
       </div>
     </div>
-    function loadNum(key: string): number {
-  try { return Number(localStorage.getItem(key)) || 0; } catch { return 0; 
   );
 }
