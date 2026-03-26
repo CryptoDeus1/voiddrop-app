@@ -401,3 +401,45 @@ export async function generateSchedule(
   }
   return null;
 }
+
+// ═══════════════════════════════════
+// WALLET PORTFOLIO — MULTI-CHAIN
+// ═══════════════════════════════════
+
+export interface ChainData {
+  chain: string;
+  balance: number;
+  tx_count: number;
+  active: boolean;
+}
+
+export interface PortfolioSummary {
+  total_balance_eth: number;
+  total_transactions: number;
+  active_chains: number;
+  total_chains: number;
+  farming_score: number;
+}
+
+export interface WalletPortfolio {
+  address: string;
+  address_short: string;
+  chains: ChainData[];
+  summary: PortfolioSummary;
+}
+
+export async function getWalletPortfolio(address: string): Promise<WalletPortfolio | null> {
+  const data = await fetchAPI(`/api/wallet/portfolio?address=${address}`);
+  if (data.success) return data.data;
+  return null;
+}
+
+export async function verifyTask(
+  address: string, chain: string, minTx: number = 1
+): Promise<{ verified: boolean; tx_count: number; balance: number } | null> {
+  const data = await fetchAPI(
+    `/api/wallet/verify-task?address=${address}&chain=${chain}&min_tx=${minTx}`
+  );
+  if (data.success) return data.data;
+  return null;
+}

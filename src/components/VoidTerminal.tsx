@@ -2,9 +2,11 @@ import { useState, useEffect } from "react";
 import {
   Radar, TrendingUp, TrendingDown, Zap, Activity,
   Anchor, ArrowUpRight, ArrowDownRight, RefreshCw,
-  AlertTriangle, Eye, BarChart3, Flame,
+  AlertTriangle, Eye, BarChart3, Flame, X,
 } from "lucide-react";
-import { getTopMarkets, getPacificaStats, type MarketData, type PacificaStats } from "../services/api";
+import { getTopMarkets, getPacificaStats, closeAllPositions, type MarketData, type PacificaStats } from "../services/api";
+import { Layers, ChevronRight } from "lucide-react";  // добавь к импортам
+import { WalletPortfolioView } from "./WalletPortfolio";
 import type { WalletState } from "../hooks/useWallet";
 
 /* ── Pilot Rank System ─────────────────────────────────── */
@@ -243,6 +245,7 @@ export function VoidTerminal({ wallet }: VoidTerminalProps) {
   const [stats, setStats] = useState<PacificaStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState<string>("");
+  const [showPortfolio, setShowPortfolio] = useState(false);
 
   const fetchMarketData = async () => {
     const [m, s] = await Promise.all([
@@ -267,6 +270,10 @@ export function VoidTerminal({ wallet }: VoidTerminalProps) {
 
   const priceMap: Record<string, number> = {};
   markets.forEach((m) => { priceMap[m.symbol] = Number(m.price); });
+
+    if (showPortfolio) {
+    return <WalletPortfolioView onClose={() => setShowPortfolio(false)} />;
+  }
 
   return (
     <div className="tma-scroll h-full flex flex-col">
@@ -452,15 +459,52 @@ export function VoidTerminal({ wallet }: VoidTerminalProps) {
           </div>
 
           {positions.length > 0 ? (
-            <div className="space-y-3">
-              {positions.map((pos: any, i: number) => (
-                <PositionCard
-                  key={i}
-                  position={pos}
-                  currentPrice={priceMap[pos.symbol] || 0}
-                />
-              ))}
-            </div>
+            <>
+              <div className="space-y-3">
+                {positions.map((pos: any, i: number) => (
+                  <PositionCard
+                    key={i}
+                    position={pos}
+                    currentPrice={priceMap[pos.symbol] || 0}
+                  />
+                ))}
+              </div>
+
+              {/* ── Trading Actions ── */}
+              <div className="flex gap-2 mt-3">
+                <button
+                  onClick={() => {
+                    if (confirm("Close ALL positions?")) {
+                      closeAllPositions().then((r) => {
+                        if (r.redirect_url) {
+                          window.open(r.redirect_url, "_blank");
+                        }
+                      });
+                    }
+                  }}
+                  className="flex-1 flex items-center justify-center gap-2 rounded-2xl py-3 text-[13px] font-bold text-red-400 transition-all active:scale-[0.97]"
+                  style={{
+                    background: "rgba(239,68,68,0.08)",
+                    border: "1px solid rgba(239,68,68,0.20)",
+                  }}
+                >
+                  <X className="h-4 w-4" />
+                  Close All
+                </button>
+
+                <button
+                  onClick={() => window.open("https://app.pacifica.fi/trade", "_blank")}
+                  className="flex-1 flex items-center justify-center gap-2 rounded-2xl py-3 text-[13px] font-bold text-white transition-all active:scale-[0.97]"
+                  style={{
+                    background: "linear-gradient(135deg, #0ea5e9, #6366f1)",
+                    boxShadow: "0 4px 16px rgba(14,165,233,0.30)",
+                  }}
+                >
+                  <ArrowUpRight className="h-4 w-4" />
+                  Trade on Pacifica
+                </button>
+              </div>
+            </>
           ) : (
             <div
               className="flex flex-col items-center gap-3 rounded-2xl py-8"
@@ -468,14 +512,14 @@ export function VoidTerminal({ wallet }: VoidTerminalProps) {
             >
               <span className="text-[36px]">🌌</span>
               <p className="text-[13px] font-semibold text-zinc-500">The void is empty</p>
-              <p className="text-[11px] text-zinc-600">Open a position on Pacifica to start your flight</p>
+              <p className="text-[11px] text-zinc-600">Open a position on Pacifica to start</p>
               <button
                 className="flex items-center gap-1.5 rounded-xl px-4 py-2 text-[12px] font-bold text-white active:scale-95 transition-all"
                 style={{
                   background: "linear-gradient(135deg, #0ea5e9, #6366f1)",
                   boxShadow: "0 0 16px rgba(14,165,233,0.35)",
                 }}
-                onClick={() => window.open("https://app.pacifica.fi", "_blank")}
+                onClick={() => window.open("https://app.pacifica.fi/trade", "_blank")}
               >
                 Launch on Pacifica <ArrowUpRight className="h-3.5 w-3.5" />
               </button>
@@ -485,6 +529,26 @@ export function VoidTerminal({ wallet }: VoidTerminalProps) {
 
         {/* ── Funding Radar ────────────────────────────────── */}
         {markets.length > 0 && <FundingMonitor markets={markets} />}
+
+                {/* ── Chain Scanner Button ─────────────────────── */}
+        <button
+          onClick={() => setShowPortfolio(true)}
+          className="relative overflow-hidden flex items-center gap-3 rounded-2xl p-4 transition-all active:scale-[0.98]"
+          style={{
+            background: "linear-gradient(135deg, rgba(139,92,246,0.08), rgba(99,102,241,0.08))",
+            border: "1px solid rgba(139,92,246,0.18)",
+          }}
+        >
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl"
+            style={{ background: "linear-gradient(135deg,#7c3aed,#6366f1)" }}>
+            <Layers className="h-5 w-5 text-white" />
+          </div>
+          <div className="flex-1 text-left">
+            <p className="text-[13px] font-bold text-white">Chain Scanner</p>
+            <p className="text-[10px] text-zinc-500">Check activity across 8 EVM chains</p>
+          </div>
+          <ChevronRight className="h-4 w-4 text-zinc-600" />
+        </button>
 
         {/* ── Pacifica Partner Badge ───────────────────────── */}
         <div
