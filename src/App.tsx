@@ -3,7 +3,7 @@ import { BottomNav, type TabId } from "./components/BottomNav";
 import { DropHuntPage }    from "./components/DropHuntPage";
 import { VoidTerminal }    from "./components/VoidTerminal";
 import { SchedulePage }    from "./components/SchedulePage";
-import { ShieldPage }      from "./components/ShieldPage";
+import { ProfilePage }     from "./components/ProfilePage";
 import { LearnPage }       from "./components/LearnPage";
 import { SplashScreen }    from "./components/SplashScreen";
 import { useWallet }       from "./hooks/useWallet";
@@ -61,7 +61,7 @@ export function App() {
         {activeTab === "drophunt"  && <DropHuntPage  wallet={wallet} />}
         {activeTab === "terminal"  && <VoidTerminal  wallet={wallet} />}
         {activeTab === "schedule"  && <SchedulePage  />}
-        {activeTab === "shield"    && <ShieldPage    wallet={wallet} />}
+        {activeTab === "profile"   && <ProfilePage   wallet={wallet} />}
         {activeTab === "education" && <LearnPage     />}
       </div>
 

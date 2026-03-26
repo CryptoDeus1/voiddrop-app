@@ -443,3 +443,56 @@ export async function verifyTask(
   if (data.success) return data.data;
   return null;
 }
+
+// ═══════════════════════════════════
+// MULTI-CHAIN WALLET SCANNER
+// ═══════════════════════════════════
+
+export interface ChainInfo {
+  chain: string;
+  type: "solana" | "evm";
+  balance: number;
+  native: string;
+  tx_count: number;
+  active: boolean;
+}
+
+export interface ScanSummary {
+  total_tx: number;
+  active_chains: number;
+  total_chains: number;
+  farming_score: number;
+}
+
+export interface ScanResult {
+  chains: ChainInfo[];
+  summary: ScanSummary;
+}
+
+export async function scanWallet(
+  solanaAddress?: string | null,
+  evmAddress?: string | null,
+): Promise<ScanResult | null> {
+  const params: string[] = [];
+  if (solanaAddress) params.push(`solana_address=${solanaAddress}`);
+  if (evmAddress) params.push(`evm_address=${evmAddress}`);
+  if (params.length === 0) return null;
+
+  const data = await fetchAPI(`/api/wallet/scan?${params.join("&")}`);
+  if (data.success) return data.data;
+  return null;
+}
+
+export async function verifyChainActivity(
+  chain: string,
+  solanaAddress?: string | null,
+  evmAddress?: string | null,
+): Promise<{ verified: boolean; tx_count: number; balance: number } | null> {
+  const params = [`chain=${chain}`];
+  if (solanaAddress) params.push(`solana_address=${solanaAddress}`);
+  if (evmAddress) params.push(`evm_address=${evmAddress}`);
+
+  const data = await fetchAPI(`/api/wallet/verify?${params.join("&")}`);
+  if (data.success) return data.data;
+  return null;
+}
