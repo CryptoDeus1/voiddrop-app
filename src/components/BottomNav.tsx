@@ -1,7 +1,7 @@
 // src/components/BottomNav.tsx
 import { Crosshair, CalendarDays, Radar, Shield, GraduationCap } from "lucide-react";
 
-export type TabId = "drophunt" | "terminal" | "schedule" | "shield" | "education";
+export type TabId = "drophunt" | "terminal" | "schedule" | "profile" | "education";
 
 const NAV_ITEMS: {
   id: TabId;
@@ -13,7 +13,7 @@ const NAV_ITEMS: {
   { id: "drophunt",  label: "DropHunt",  icon: Crosshair,     badge: "9" },
   { id: "terminal",  label: "Terminal",  icon: Radar,          badgeKey: "positions" },
   { id: "schedule",  label: "Schedule",  icon: CalendarDays              },
-  { id: "shield",    label: "Shield",    icon: Shield                    },
+  { id: "profile",    label: "Profile",    icon: Shield                    },
   { id: "education", label: "Learn",     icon: GraduationCap, badge: "3" },
 ];
 
