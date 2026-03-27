@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { BottomNav, type TabId } from "./components/BottomNav";
 import { DropHuntPage }    from "./components/DropHuntPage";
 import { VoidTerminal }    from "./components/VoidTerminal";
-import { SchedulePage }    from "./components/SchedulePage";
+import { NetworksPage }    from "./components/NetworksPage";
 import { ProfilePage }     from "./components/ProfilePage";
 import { LearnPage }       from "./components/LearnPage";
 import { SplashScreen }    from "./components/SplashScreen";
@@ -60,7 +60,7 @@ export function App() {
       <div className="relative z-10 flex-1 overflow-hidden">
         {activeTab === "drophunt"  && <DropHuntPage  wallet={wallet} />}
         {activeTab === "terminal"  && <VoidTerminal  wallet={wallet} />}
-        {activeTab === "schedule"  && <SchedulePage  />}
+        {activeTab === "networks"  && <NetworksPage  wallet={wallet} />}
         {activeTab === "profile"   && <ProfilePage   wallet={wallet} />}
         {activeTab === "education" && <LearnPage     />}
       </div>

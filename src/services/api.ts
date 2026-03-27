@@ -496,3 +496,59 @@ export async function verifyChainActivity(
   if (data.success) return data.data;
   return null;
 }
+
+// ═══════════════════════════════════
+// SINGLE CHAIN CHECK
+// ═══════════════════════════════════
+
+export async function checkChain(
+  chain: string, address: string
+): Promise<{ chain: string; balance: number; tx_count: number } | null> {
+  const data = await fetchAPI(`/api/chain/check?chain=${chain}&address=${address}`);
+  if (data.success) return data.data;
+  return null;
+}
+
+// ═══════════════════════════════════
+// ACTION HISTORY
+// ═══════════════════════════════════
+
+export interface ActionRecord {
+  chain: string;
+  action_type: string;
+  provider: string;
+  xp: number;
+  tx_count: number;
+  timestamp: number;
+  verified: boolean;
+}
+
+export async function saveAction(
+  chain: string, actionType: string, provider: string, xp: number, txCount: number
+): Promise<boolean> {
+  const telegramId = getTelegramUserId();
+  if (!telegramId) return false;
+  const data = await fetchAPI(
+    `/api/actions/save?telegram_id=${telegramId}&chain=${chain}&action_type=${actionType}&provider=${provider}&xp=${xp}&tx_count=${txCount}`
+  );
+  // POST запрос
+  try {
+    const resp = await fetch(
+      `${API_URL}/api/actions/save?telegram_id=${telegramId}&chain=${chain}&action_type=${actionType}&provider=${provider}&xp=${xp}&tx_count=${txCount}`,
+      { method: "POST" }
+    );
+    const result = await resp.json();
+    return result.success;
+  } catch { return false; }
+}
+
+export async function getActionHistory(
+  chain?: string
+): Promise<{ actions: ActionRecord[]; total_actions: number; total_xp: number } | null> {
+  const telegramId = getTelegramUserId();
+  if (!telegramId) return null;
+  const chainParam = chain ? `&chain=${chain}` : "";
+  const data = await fetchAPI(`/api/actions/history?telegram_id=${telegramId}${chainParam}`);
+  if (data.success) return data.data;
+  return null;
+}
