@@ -1,5 +1,5 @@
 // src/components/BottomNav.tsx
-import { Crosshair, CalendarDays, Radar, Shield, GraduationCap, Globe } from "lucide-react";
+import { Zap, Crosshair, CalendarDays, Radar, Shield, GraduationCap, Globe } from "lucide-react";
 
 export type TabId = "drophunt" | "terminal" | "networks" | "profile" | "education";
 
@@ -10,7 +10,7 @@ const NAV_ITEMS: {
   badge?: string;        // статичный бейдж
   badgeKey?: string;     // динамический из пропсов
 }[] = [
-  { id: "drophunt",  label: "DropHunt",  icon: Crosshair,     badge: "9" },
+  { id: "drophunt",  label: "Home",      icon: Zap                       },
   { id: "terminal",  label: "Terminal",  icon: Radar,          badgeKey: "positions" },
   { id: "networks",  label: "Networks",  icon: Globe              },
   { id: "profile",    label: "Profile",    icon: Shield                    },

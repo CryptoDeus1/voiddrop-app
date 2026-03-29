@@ -2,11 +2,12 @@
 import { useState, useEffect } from "react";
 import {
   Globe, Activity, ChevronRight, Zap,
-  CalendarDays, CheckCircle2,
+  CalendarDays, CheckCircle2,X,
 } from "lucide-react";
 import { NETWORKS, type NetworkDef } from "../data/networks";
 import { NetworkDetail } from "./NetworkDetail";
 import { getSchedule, checkChain, getActionHistory } from "../services/api";
+
 import type { WalletState } from "../hooks/useWallet";
 
 interface NetworksPageProps {
@@ -19,6 +20,8 @@ export function NetworksPage({ wallet }: NetworksPageProps) {
   const [actionCounts, setActionCounts] = useState<Record<string, number>>({});
   const [scheduleToday, setScheduleToday] = useState<number>(0);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [filterType, setFilterType] = useState<"all" | "mainnet" | "testnet">("all");
 
   const evmAddress = localStorage.getItem("vd_evm") || "";
   const solAddress = wallet.wallet || "";
@@ -26,6 +29,8 @@ export function NetworksPage({ wallet }: NetworksPageProps) {
   useEffect(() => {
     loadData();
   }, [wallet.wallet]);
+
+  
 
   const loadData = async () => {
     setLoading(true);
@@ -35,18 +40,15 @@ export function NetworksPage({ wallet }: NetworksPageProps) {
     const address = evmAddress || solAddress;
 
     if (address) {
-      const results = await Promise.all(
-        NETWORKS.map(async (net) => {
-          const data = await checkChain(net.id, address);
-          return { id: net.id, data };
-        })
-      );
-      results.forEach((r) => {
-        if (r.data) {
-          stats[r.id] = { tx: r.data.tx_count, balance: r.data.balance };
-        }
-      });
-    }
+     const results = await Promise.all(
+  NETWORKS.map(async (net) => {
+    // Правильный адрес для каждой сети
+    const addr = net.id === "solana" ? solAddress : evmAddress;
+    if (!addr) return { id: net.id, data: null };
+    const data = await checkChain(net.id, addr);
+    return { id: net.id, data };
+  })
+);
     setChainStats(stats);
 
     // Action counts per chain
@@ -80,6 +82,19 @@ export function NetworksPage({ wallet }: NetworksPageProps) {
     );
   }
 
+  const filteredNetworks = NETWORKS.filter((net) => {
+  if (filterType !== "all" && net.type !== filterType) return false;
+  if (search) {
+    const q = search.toLowerCase();
+    return (
+      net.name.toLowerCase().includes(q) ||
+      net.description.toLowerCase().includes(q) ||
+      net.tags.some((t) => t.includes(q))
+    );
+  }
+  return true;
+});
+
   return (
     <div className="tma-scroll h-full flex flex-col">
 
@@ -107,6 +122,35 @@ export function NetworksPage({ wallet }: NetworksPageProps) {
         </div>
       </div>
 
+              {/* ── Search + Filters ──────── */}
+        <div className="flex flex-col gap-2">
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-zinc-600" />
+            <input type="text" placeholder="Search networks..." value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="h-9 w-full rounded-xl pl-8 pr-9 text-[13px] text-zinc-200 placeholder-zinc-600"
+              style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.09)" }} />
+            {search && (
+              <button onClick={() => setSearch("")}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-600 active:scale-90">
+                <X className="h-3.5 w-3.5" />
+              </button>
+            )}
+          </div>
+          <div className="flex gap-2">
+            {(["all", "mainnet", "testnet"] as const).map((f) => (
+              <button key={f} onClick={() => setFilterType(f)}
+                className="rounded-full px-3 py-1.5 text-[11px] font-semibold capitalize transition-all active:scale-95"
+                style={filterType === f
+                  ? { background: "rgba(139,92,246,0.18)", border: "1px solid rgba(139,92,246,0.40)", color: "#c4b5fd" }
+                  : { background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: "#71717a" }
+                }>
+                {f}
+              </button>
+            ))}
+          </div>
+        </div>
+
       {/* ══ Body ═════════════════════════════ */}
       <div className="flex flex-col gap-3 px-4 pb-nav pt-4">
 
@@ -128,7 +172,7 @@ export function NetworksPage({ wallet }: NetworksPageProps) {
         ) : (
           <>
             {/* Network Cards */}
-            {NETWORKS.map((net) => {
+            {filteredNetworks.map((net) => {
               const stats = chainStats[net.id];
               const actions = actionCounts[net.id] || 0;
               const isActive = stats && stats.tx > 0;
@@ -143,6 +187,31 @@ export function NetworksPage({ wallet }: NetworksPageProps) {
                     border: `1px solid ${isActive ? `${net.color}25` : "rgba(255,255,255,0.07)"}`,
                   }}
                 >
+                                        {/* Data row */}
+                    <div className="flex items-center gap-2 mt-1 flex-wrap">
+                      {net.funding && (
+                        <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full"
+                          style={{ background: "rgba(16,185,129,0.10)", color: "#6ee7b7" }}>
+                          💰 {net.funding}
+                        </span>
+                      )}
+                      {net.reward && (
+                        <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full"
+                          style={{ background: "rgba(245,158,11,0.10)", color: "#fcd34d" }}>
+                          🎁 {net.reward}
+                        </span>
+                      )}
+                      {net.probability && (
+                        <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full"
+                          style={{
+                            background: net.probability === "Confirmed" ? "rgba(16,185,129,0.10)" : "rgba(245,158,11,0.10)",
+                            color: net.probability === "Confirmed" ? "#6ee7b7" : "#fcd34d",
+                          }}>
+                          {net.probability}
+                        </span>
+                      )}
+                    </div>
+
                   {/* Top glow */}
                   {isActive && (
                     <div className="absolute inset-x-0 top-0 h-px"

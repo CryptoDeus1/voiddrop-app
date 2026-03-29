@@ -33,7 +33,12 @@ export function NetworkDetail({ network, wallet, onBack }: Props) {
   const [verifyResult, setVerifyResult] = useState<"success" | "fail" | null>(null);
   const [toast, setToast] = useState<string | null>(null);
 
-  const address = localStorage.getItem("vd_evm") || wallet.wallet || "";
+// Solana кошелёк из бота, EVM из localStorage
+const evmAddress = localStorage.getItem("vd_evm") || "";
+const solAddress = wallet.wallet || "";
+
+// Выбираем правильный адрес для этой сети
+const address = network.id === "solana" ? solAddress : evmAddress;
 
   useEffect(() => {
     loadChainData();
