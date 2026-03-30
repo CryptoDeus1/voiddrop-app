@@ -91,7 +91,7 @@ const address = network.id === "solana" ? solAddress : evmAddress;
   };
 
   // Верификация — проверяем вырос ли TX count
-  const handleVerify = async (action: ActionCategory) => {
+    const handleVerify = async (action: ActionCategory) => {
     if (!address || snapshot === null) {
       setToast("❌ Connect wallet in Profile first");
       return;
@@ -100,28 +100,38 @@ const address = network.id === "solana" ? solAddress : evmAddress;
     setVerifying(true);
     setVerifyResult(null);
 
-    // Ждём немного (транзакция может ещё не подтвердиться)
-    await new Promise((r) => setTimeout(r, 1000));
+    // Пробуем 3 раза с задержкой (TX может не сразу подтвердиться)
+    let verified = false;
+    let newData = null;
 
-    const data = await checkChain(network.id, address);
+    for (let attempt = 0; attempt < 3; attempt++) {
+      // Ждём перед проверкой (3, 6, 10 секунд)
+      const delay = [3000, 6000, 10000][attempt];
+      setToast(`🔍 Checking... attempt ${attempt + 1}/3`);
+      await new Promise((r) => setTimeout(r, delay));
 
-    if (data && data.tx_count > snapshot) {
-      // ✅ TX count вырос!
+      newData = await checkChain(network.id, address);
+
+      if (newData && newData.tx_count > snapshot) {
+        verified = true;
+        break;
+      }
+    }
+
+    if (verified && newData) {
       setVerifyResult("success");
-      setTxCount(data.tx_count);
-      setBalance(data.balance);
+      setTxCount(newData.tx_count);
+      setBalance(newData.balance);
 
-      // Находим последний использованный провайдер (берём первый)
       const providerName = action.providers[0]?.name || action.label;
-
-      await saveAction(network.id, action.type, providerName, action.xp, data.tx_count);
+      await saveAction(network.id, action.type, providerName, action.xp, newData.tx_count);
       await loadHistory();
 
       setToast(`✅ Verified! +${action.xp} XP`);
-      setSnapshot(data.tx_count);
+      setSnapshot(newData.tx_count);
     } else {
       setVerifyResult("fail");
-      setToast("❌ No new transaction found. Try again after confirming TX.");
+      setToast("❌ No new TX yet. Wait a moment and try again.");
     }
 
     setVerifying(false);
