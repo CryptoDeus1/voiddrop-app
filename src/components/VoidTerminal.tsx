@@ -227,7 +227,6 @@ export function VoidTerminal({ wallet }: VoidTerminalProps) {
   const [stats, setStats] = useState<PacificaStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState<string>("");
-  const [showPortfolio, setShowPortfolio] = useState(false);
 
   const fetchMarketData = async () => {
     const [m, s] = await Promise.all([
@@ -248,6 +247,7 @@ export function VoidTerminal({ wallet }: VoidTerminalProps) {
 
   const priceMap: Record<string, number> = {};
   markets.forEach((m) => { priceMap[m.symbol] = Number(m.price); });
+  const positions = wallet.portfolio?.positions || [];
 
   return (
     <div className="tma-scroll h-full flex flex-col">
@@ -291,12 +291,15 @@ export function VoidTerminal({ wallet }: VoidTerminalProps) {
             <span className="text-[16px] font-extrabold text-violet-400">{positions.length}</span>
             <span className="text-[9px] font-semibold uppercase tracking-wider text-zinc-600">Positions</span>
           </div>
-          <div
+                   <div
             className="flex flex-col items-center gap-1 rounded-2xl py-3"
             style={{ background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.18)" }}
           >
             <Flame className="h-4 w-4 text-amber-400" />
-            <span className="text-[9px] font-semibold uppercase tracking-wider text-zinc-600">Rank</span>
+            <span className="text-[16px] font-extrabold text-amber-400">
+              {wallet.tradeHistory?.stats?.total_trades || 0}
+            </span>
+            <span className="text-[9px] font-semibold uppercase tracking-wider text-zinc-600">Trades</span>
           </div>
         </div>
 
