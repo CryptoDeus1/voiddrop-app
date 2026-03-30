@@ -5,26 +5,8 @@ import {
   AlertTriangle, Eye, BarChart3, Flame, X,
 } from "lucide-react";
 import { getTopMarkets, getPacificaStats, closeAllPositions, type MarketData, type PacificaStats } from "../services/api";
-import { Layers, ChevronRight } from "lucide-react";  // добавь к импортам
-import { WalletPortfolioView } from "./WalletPortfolio";
 import type { WalletState } from "../hooks/useWallet";
 
-/* ── Pilot Rank System ─────────────────────────────────── */
-const RANKS = [
-  { name: "Cadet",       icon: "🌑", minTrades: 0,  color: "#71717a" },
-  { name: "Navigator",   icon: "🌘", minTrades: 5,  color: "#a78bfa" },
-  { name: "Commander",   icon: "🌗", minTrades: 15, color: "#38bdf8" },
-  { name: "Captain",     icon: "🌖", minTrades: 30, color: "#34d399" },
-  { name: "Admiral",     icon: "🌕", minTrades: 50, color: "#fbbf24" },
-  { name: "Void Master", icon: "⭐", minTrades: 100, color: "#f472b6" },
-];
-
-function getRank(trades: number) {
-  for (let i = RANKS.length - 1; i >= 0; i--) {
-    if (trades >= RANKS[i].minTrades) return RANKS[i];
-  }
-  return RANKS[0];
-}
 
 /* ── Price Ticker Card ─────────────────────────────────── */
 function PriceTicker({ market, index }: { market: MarketData; index: number }) {
@@ -264,54 +246,26 @@ export function VoidTerminal({ wallet }: VoidTerminalProps) {
     return () => clearInterval(interval);
   }, []);
 
-  /* Берём позиции из общего wallet state — не дублируем запрос */
-  const positions = wallet.portfolio?.positions || [];
-  const rank = getRank(positions.length);
-
   const priceMap: Record<string, number> = {};
   markets.forEach((m) => { priceMap[m.symbol] = Number(m.price); });
-
-    if (showPortfolio) {
-    return <WalletPortfolioView onClose={() => setShowPortfolio(false)} />;
-  }
 
   return (
     <div className="tma-scroll h-full flex flex-col">
 
       {/* ══ Sticky Header ═══════════════════════════════════════ */}
-      <div
-        className="sticky top-0 z-30 px-4 py-3"
-        style={{
-          background: "rgba(9,9,11,0.92)",
-          backdropFilter: "blur(20px)",
-          WebkitBackdropFilter: "blur(20px)",
-          borderBottom: "1px solid rgba(14,165,233,0.15)",
-        }}
-      >
+            <div className="sticky top-0 z-30 px-4 py-3"
+        style={{ background: "rgba(9,9,11,0.92)", backdropFilter: "blur(20px)", borderBottom: "1px solid rgba(14,165,233,0.15)" }}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div
-              className="relative flex h-8 w-8 items-center justify-center rounded-xl"
-              style={{
-                background: "linear-gradient(135deg, #0ea5e9, #6366f1)",
-                boxShadow: "0 0 16px rgba(14,165,233,0.40)",
-              }}
-            >
+            <div className="relative flex h-8 w-8 items-center justify-center rounded-xl"
+              style={{ background: "linear-gradient(135deg, #0ea5e9, #6366f1)", boxShadow: "0 0 16px rgba(14,165,233,0.40)" }}>
               <Radar className="h-4 w-4 text-white" />
               <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-emerald-400 ring-2 ring-zinc-950 animate-pulse" />
             </div>
             <div>
-              <h1 className="text-[16px] font-extrabold text-white tracking-tight">Void Terminal</h1>
+              <h1 className="text-[16px] font-extrabold text-white">Void Terminal</h1>
               <p className="text-[9px] text-sky-400 font-semibold uppercase tracking-[0.15em]">Pacifica Trading Hub</p>
             </div>
-          </div>
-
-          <div
-            className="flex items-center gap-1.5 rounded-2xl px-3 py-1.5"
-            style={{ background: `${rank.color}15`, border: `1px solid ${rank.color}30` }}
-          >
-            <span className="text-[14px]">{rank.icon}</span>
-            <span className="text-[11px] font-extrabold" style={{ color: rank.color }}>{rank.name}</span>
           </div>
         </div>
       </div>
@@ -342,7 +296,6 @@ export function VoidTerminal({ wallet }: VoidTerminalProps) {
             style={{ background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.18)" }}
           >
             <Flame className="h-4 w-4 text-amber-400" />
-            <span className="text-[16px] font-extrabold text-amber-400">{rank.icon}</span>
             <span className="text-[9px] font-semibold uppercase tracking-wider text-zinc-600">Rank</span>
           </div>
         </div>
@@ -414,30 +367,44 @@ export function VoidTerminal({ wallet }: VoidTerminalProps) {
           </div>
         )}
 
-        {/* ── Live Prices ──────────────────────────────────── */}
+                {/* ── Live Prices (compact) ────────────────────── */}
         <div>
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              <p className="text-[11px] font-semibold uppercase tracking-widest text-zinc-600">Live Markets</p>
+              <p className="text-[11px] font-semibold uppercase tracking-widest text-zinc-600">Markets</p>
             </div>
-            <button
-              onClick={fetchMarketData}
-              className="flex items-center gap-1 text-[10px] text-sky-400 font-semibold active:scale-95 transition-all"
-            >
+            <button onClick={fetchMarketData}
+              className="flex items-center gap-1 text-[10px] text-sky-400 font-semibold active:scale-95">
               <RefreshCw className="h-3 w-3" /> {lastUpdate}
             </button>
           </div>
 
           {loading ? (
-            <div className="flex items-center justify-center py-8">
-              <div className="h-8 w-8 rounded-full border-2 border-sky-500/30 border-t-sky-400 animate-spin" />
+            <div className="flex items-center justify-center py-4">
+              <div className="h-6 w-6 rounded-full border-2 border-sky-500/30 border-t-sky-400 animate-spin" />
             </div>
           ) : (
-            <div className="space-y-2">
-              {markets.map((m, i) => (
-                <PriceTicker key={m.symbol} market={m} index={i} />
-              ))}
+            <div className="grid grid-cols-2 gap-2">
+              {markets.map((m) => {
+                const price = Number(m.price);
+                const funding = Number(m.funding_rate);
+                const isPos = funding >= 0;
+                return (
+                  <div key={m.symbol} className="flex items-center gap-2 rounded-xl p-2.5"
+                    style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}>
+                    <span className="text-[13px] font-extrabold text-white">{m.symbol}</span>
+                    <div className="flex-1 text-right">
+                      <p className="text-[12px] font-bold text-white tabular-nums">
+                        ${price >= 100 ? price.toLocaleString(undefined, { maximumFractionDigits: 0 }) : price.toFixed(2)}
+                      </p>
+                      <p className={`text-[9px] font-bold ${isPos ? "text-emerald-400" : "text-red-400"}`}>
+                        {(funding * 100).toFixed(4)}%
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>
@@ -527,28 +494,62 @@ export function VoidTerminal({ wallet }: VoidTerminalProps) {
           )}
         </div>
 
+                {/* ── Trade History ────────────────────────────── */}
+        {wallet.tradeHistory && wallet.tradeHistory.closed && wallet.tradeHistory.closed.length > 0 && (
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-[11px] font-semibold uppercase tracking-widest text-zinc-600">
+                📜 Trade History
+              </p>
+              <span className="rounded-full px-2 py-0.5 text-[10px] font-bold text-zinc-400"
+                style={{ background: "rgba(255,255,255,0.06)" }}>
+                {wallet.tradeHistory.closed.length}
+              </span>
+            </div>
+            <div className="space-y-1.5">
+              {wallet.tradeHistory.closed.slice(0, 10).map((trade: any, i: number) => {
+                const isWin = trade.win;
+                const pnl = trade.pnl || 0;
+                const isLong = trade.side === "bid" || trade.side === "long";
+                const closedAt = trade.closed_at
+                  ? new Date(trade.closed_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })
+                  : "—";
+
+                return (
+                  <div key={i} className="flex items-center gap-3 rounded-xl px-3 py-2.5"
+                    style={{
+                      background: isWin ? "rgba(16,185,129,0.04)" : "rgba(239,68,68,0.04)",
+                      border: `1px solid ${isWin ? "rgba(16,185,129,0.10)" : "rgba(239,68,68,0.10)"}`,
+                    }}>
+                    <span className="text-[14px] shrink-0">{isWin ? "🟢" : "🔴"}</span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[12px] font-bold text-white">{trade.symbol}</span>
+                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full"
+                          style={{
+                            background: isLong ? "rgba(16,185,129,0.12)" : "rgba(239,68,68,0.12)",
+                            color: isLong ? "#6ee7b7" : "#fca5a5",
+                          }}>
+                          {isLong ? "LONG" : "SHORT"}
+                        </span>
+                      </div>
+                      <p className="text-[9px] text-zinc-600 mt-0.5">
+                        ${Number(trade.entry_price).toLocaleString()} → ${Number(trade.close_price).toLocaleString()} • {closedAt}
+                      </p>
+                    </div>
+                    <span className={`text-[13px] font-extrabold ${isWin ? "text-emerald-400" : "text-red-400"}`}>
+                      {pnl >= 0 ? "+" : ""}${pnl.toFixed(2)}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         {/* ── Funding Radar ────────────────────────────────── */}
         {markets.length > 0 && <FundingMonitor markets={markets} />}
 
-                {/* ── Chain Scanner Button ─────────────────────── */}
-        <button
-          onClick={() => setShowPortfolio(true)}
-          className="relative overflow-hidden flex items-center gap-3 rounded-2xl p-4 transition-all active:scale-[0.98]"
-          style={{
-            background: "linear-gradient(135deg, rgba(139,92,246,0.08), rgba(99,102,241,0.08))",
-            border: "1px solid rgba(139,92,246,0.18)",
-          }}
-        >
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl"
-            style={{ background: "linear-gradient(135deg,#7c3aed,#6366f1)" }}>
-            <Layers className="h-5 w-5 text-white" />
-          </div>
-          <div className="flex-1 text-left">
-            <p className="text-[13px] font-bold text-white">Chain Scanner</p>
-            <p className="text-[10px] text-zinc-500">Check activity across 8 EVM chains</p>
-          </div>
-          <ChevronRight className="h-4 w-4 text-zinc-600" />
-        </button>
 
         {/* ── Pacifica Partner Badge ───────────────────────── */}
         <div
