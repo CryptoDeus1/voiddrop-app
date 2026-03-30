@@ -6,6 +6,9 @@ import {
   Search, X, Eye, Clock,
 } from "lucide-react";
 import {
+  getActionHistory, type ActionRecord,
+} from "../services/api";
+import {
   getSybilScore, scanWallet,
   type SybilScoreData, type ScanResult,
 } from "../services/api";
@@ -52,14 +55,28 @@ export function ProfilePage({ wallet }: ProfilePageProps) {
   const [showBreakdown, setShowBreakdown] = useState(false);
   const [showChains, setShowChains] = useState(true);
   const [copied, setCopied] = useState("");
+  const [actions, setActions] = useState<ActionRecord[]>([]);
+  const [actionsTotal, setActionsTotal] = useState(0);
+  const [actionsXP, setActionsXP] = useState(0);
+  const [actionFilter, setActionFilter] = useState<string>("all");
+  const [showActions, setShowActions] = useState(true);
+  const [showAllActions, setShowAllActions] = useState(false);
 
   // Загрузка sybil score
   useEffect(() => {
-    getSybilScore().then((d) => {
-      setSybil(d);
-      setLoading(false);
-    });
-  }, []);
+  getSybilScore().then((d) => {
+    setSybil(d);
+    setLoading(false);
+  });
+  // Загружаем историю действий
+  getActionHistory().then((d) => {
+    if (d) {
+      setActions(d.actions);
+      setActionsTotal(d.total_actions);
+      setActionsXP(d.total_xp);
+    }
+  });
+}, []);
 
   // Авто-скан при загрузке если есть адреса
   useEffect(() => {
@@ -296,6 +313,123 @@ export function ProfilePage({ wallet }: ProfilePageProps) {
                 <span className="text-[9px] font-semibold uppercase tracking-wider text-zinc-600">Tasks</span>
               </div>
             </div>
+
+                        {/* ── Activity History ─────────── */}
+            {actions.length > 0 && (
+              <div>
+                <button onClick={() => setShowActions(p => !p)}
+                  className="flex w-full items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-3.5 w-3.5 text-violet-400" />
+                    <p className="text-[11px] font-semibold uppercase tracking-widest text-zinc-600">
+                      Activity History
+                    </p>
+                    <span className="rounded-full px-1.5 py-0.5 text-[9px] font-bold text-violet-300"
+                      style={{ background: "rgba(139,92,246,0.12)" }}>
+                      {actionsTotal}
+                    </span>
+                  </div>
+                  {showActions
+                    ? <ChevronUp className="h-3.5 w-3.5 text-zinc-600" />
+                    : <ChevronDown className="h-3.5 w-3.5 text-zinc-600" />
+                  }
+                </button>
+
+                {showActions && (
+                  <>
+                    {/* Chain filter */}
+                    <div className="flex gap-1.5 overflow-x-auto scrollbar-hide pb-2 mb-2">
+                      <button
+                        onClick={() => setActionFilter("all")}
+                        className="shrink-0 rounded-full px-2.5 py-1 text-[10px] font-semibold transition-all active:scale-95"
+                        style={actionFilter === "all"
+                          ? { background: "rgba(139,92,246,0.18)", border: "1px solid rgba(139,92,246,0.40)", color: "#c4b5fd" }
+                          : { background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: "#71717a" }
+                        }>
+                        All
+                      </button>
+                      {[...new Set(actions.map(a => a.chain))].map((chain) => (
+                        <button
+                          key={chain}
+                          onClick={() => setActionFilter(chain)}
+                          className="shrink-0 rounded-full px-2.5 py-1 text-[10px] font-semibold capitalize transition-all active:scale-95"
+                          style={actionFilter === chain
+                            ? { background: "rgba(139,92,246,0.18)", border: "1px solid rgba(139,92,246,0.40)", color: "#c4b5fd" }
+                            : { background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: "#71717a" }
+                          }>
+                          {chain}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Action list */}
+                    <div className="space-y-1.5">
+                      {actions
+                        .filter(a => actionFilter === "all" || a.chain === actionFilter)
+                        .slice(0, showAllActions ? 50 : 5)
+                        .map((action, i) => {
+                          const ago = (() => {
+                            const diff = Date.now() / 1000 - action.timestamp;
+                            if (diff < 60) return "just now";
+                            if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+                            if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+                            return `${Math.floor(diff / 86400)}d ago`;
+                          })();
+
+                          const actionEmojis: Record<string, string> = {
+                            bridge: "🌉", swap: "🔄", stake: "💰", lend: "🏦",
+                            nft: "🎨", deploy: "📝", faucet: "🚰",
+                          };
+
+                          return (
+                            <div key={i} className="flex items-center gap-3 rounded-xl px-3 py-2.5"
+                              style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
+                              <span className="text-[16px] shrink-0">
+                                {actionEmojis[action.action_type] || "✅"}
+                              </span>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-[12px] font-semibold text-zinc-300 capitalize">
+                                  {action.action_type} via {action.provider}
+                                </p>
+                                <div className="flex items-center gap-2 mt-0.5">
+                                  <span className="text-[9px] font-semibold capitalize px-1.5 py-0.5 rounded-full"
+                                    style={{ background: "rgba(139,92,246,0.10)", color: "#c4b5fd" }}>
+                                    {action.chain}
+                                  </span>
+                                  <span className="text-[9px] text-zinc-600 flex items-center gap-0.5">
+                                    <Clock className="h-2.5 w-2.5" /> {ago}
+                                  </span>
+                                </div>
+                              </div>
+                              <div className="text-right shrink-0">
+                                <span className="text-[11px] font-bold text-emerald-400">+{action.xp}</span>
+                                <p className="text-[8px] text-zinc-600">XP</p>
+                              </div>
+                            </div>
+                          );
+                        })}
+                    </div>
+
+                    {/* Show more */}
+                    {actions.filter(a => actionFilter === "all" || a.chain === actionFilter).length > 5 && (
+                      <button
+                        onClick={() => setShowAllActions(p => !p)}
+                        className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-xl py-2.5 text-[11px] font-semibold text-zinc-500 active:scale-[0.98]"
+                        style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}>
+                        {showAllActions ? "Show Less" : `Show All (${actions.filter(a => actionFilter === "all" || a.chain === actionFilter).length})`}
+                      </button>
+                    )}
+
+                    {/* Total XP */}
+                    <div className="flex items-center justify-center gap-2 mt-2 rounded-xl py-2"
+                      style={{ background: "rgba(245,158,11,0.06)", border: "1px solid rgba(245,158,11,0.12)" }}>
+                      <Zap className="h-3.5 w-3.5 text-amber-400" />
+                      <span className="text-[12px] font-bold text-amber-300">{actionsXP} XP earned</span>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
 
             {/* ── Chain Activity ───────────────── */}
             {scan && scan.chains.length > 0 && (

@@ -228,6 +228,99 @@ const address = network.id === "solana" ? solAddress : evmAddress;
           )}
         </div>
 
+                {/* ── Anti-Sybil Reminder ──────── */}
+        {(() => {
+          // Считаем дни с последнего действия
+          const lastAction = history.length > 0 ? history[0] : null;
+          const daysSince = lastAction
+            ? Math.floor((Date.now() / 1000 - lastAction.timestamp) / 86400)
+            : -1;
+
+          // Уникальные типы действий
+          const uniqueTypes = new Set(history.map(a => a.action_type)).size;
+          const totalActions = history.length;
+
+          // Статус
+          let status: "good" | "warning" | "danger" = "good";
+          let statusText = "";
+          let statusEmoji = "🟢";
+
+          if (daysSince < 0 || daysSince > 7) {
+            status = "danger";
+            statusEmoji = "🔴";
+            statusText = daysSince < 0
+              ? "No activity yet — start farming!"
+              : `${daysSince} days since last action — act now!`;
+          } else if (daysSince > 3) {
+            status = "warning";
+            statusEmoji = "🟡";
+            statusText = `${daysSince} days since last action — stay active`;
+          } else {
+            statusText = daysSince === 0
+              ? "Active today — great!"
+              : `Last active ${daysSince}d ago — looking good`;
+          }
+
+          const statusColors = {
+            good: { bg: "rgba(16,185,129,0.06)", border: "rgba(16,185,129,0.15)" },
+            warning: { bg: "rgba(245,158,11,0.06)", border: "rgba(245,158,11,0.15)" },
+            danger: { bg: "rgba(239,68,68,0.06)", border: "rgba(239,68,68,0.15)" },
+          };
+
+          return (
+            <div className="rounded-2xl p-3.5"
+              style={{ background: statusColors[status].bg, border: `1px solid ${statusColors[status].border}` }}>
+              <div className="flex items-center gap-2 mb-2">
+                <Shield className="h-4 w-4 text-violet-400" />
+                <p className="text-[12px] font-bold text-white">Anti-Sybil Status</p>
+                <span className="text-[12px]">{statusEmoji}</span>
+              </div>
+
+              <p className="text-[11px] text-zinc-400 mb-2">{statusText}</p>
+
+              <div className="flex items-center gap-3">
+                <div className="flex-1">
+                  <div className="flex items-center justify-between text-[10px] mb-1">
+                    <span className="text-zinc-600">Diversity</span>
+                    <span className="font-bold text-zinc-400">{uniqueTypes}/{network.actions.length} types</span>
+                  </div>
+                  <div className="h-1.5 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.07)" }}>
+                    <div className="h-full rounded-full transition-all"
+                      style={{
+                        width: `${Math.min((uniqueTypes / network.actions.length) * 100, 100)}%`,
+                        background: uniqueTypes >= network.actions.length * 0.6
+                          ? "#10b981" : uniqueTypes >= 2 ? "#f59e0b" : "#ef4444",
+                      }} />
+                  </div>
+                </div>
+                <div className="shrink-0 text-center">
+                  <span className="text-[14px] font-black text-violet-400">{totalActions}</span>
+                  <p className="text-[8px] text-zinc-600">TOTAL</p>
+                </div>
+              </div>
+
+              {/* Рекомендация что делать */}
+              {(() => {
+                const doneTypes = new Set(history.map(a => a.action_type));
+                const notDone = network.actions.filter(a => !doneTypes.has(a.type));
+                if (notDone.length > 0) {
+                  const suggest = notDone[0];
+                  return (
+                    <div className="flex items-center gap-2 mt-2 rounded-lg px-2.5 py-2"
+                      style={{ background: "rgba(139,92,246,0.08)", border: "1px solid rgba(139,92,246,0.15)" }}>
+                      <span className="text-[14px]">{suggest.emoji}</span>
+                      <p className="text-[10px] text-zinc-400 flex-1">
+                        <span className="text-violet-400 font-semibold">Try:</span> {suggest.label} (+{suggest.xp} XP)
+                      </p>
+                    </div>
+                  );
+                }
+                return null;
+              })()}
+            </div>
+          );
+        })()}
+
         {/* ── Actions ──────────────────── */}
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-widest text-zinc-600 mb-2">
