@@ -629,4 +629,74 @@ export const NETWORKS: NetworkDef[] = [
       ]},
     ],
   },
+    {
+    id: "ink",
+    name: "Ink",
+    emoji: "🖋️",
+    color: "#7c3aed",
+    gradFrom: "#7c3aed",
+    gradTo: "#5b21b6",
+    type: "mainnet",
+    native: "ETH",
+    description: "Kraken's L2 chain (OP Stack)",
+    explorer: "https://explorer.inkonchain.com",
+    funding: "Kraken",
+    reward: "$100-800",
+    probability: "High",
+    tags: ["evm", "l2", "op", "defi"],
+    actions: [
+      { type: "bridge", emoji: "🌉", label: "Bridge", xp: 20, difficulty: "Easy", providers: [
+        { id: "ink-bridge", name: "Ink Bridge", url: "https://inkonchain.com/bridge", description: "Official bridge" },
+        { id: "relay-ink", name: "Relay", url: "https://relay.link/bridge/ink", description: "Fast bridge" },
+        { id: "superbridge-ink", name: "Superbridge", url: "https://superbridge.app/ink-mainnet", description: "OP bridge" },
+      ]},
+      { type: "swap", emoji: "🔄", label: "Swap", xp: 15, difficulty: "Easy", providers: [
+        { id: "uniswap-ink", name: "Uniswap", url: "https://app.uniswap.org", description: "Uniswap on Ink" },
+        { id: "inkswap", name: "InkSwap", url: "https://inkswap.finance", description: "Native DEX" },
+      ]},
+      { type: "lend", emoji: "🏦", label: "Lend", xp: 25, difficulty: "Medium", providers: [
+        { id: "aave-ink", name: "Aave", url: "https://app.aave.com", description: "Lending protocol" },
+      ]},
+      { type: "nft", emoji: "🎨", label: "NFT", xp: 15, difficulty: "Easy", providers: [
+        { id: "zora-ink", name: "Zora", url: "https://zora.co", description: "Create & collect" },
+      ]},
+      { type: "deploy", emoji: "📝", label: "Deploy", xp: 40, difficulty: "Hard", providers: [
+        { id: "remix-ink", name: "Remix IDE", url: "https://remix.ethereum.org", description: "Deploy contract" },
+      ]},
+    ],
+  },
+  {
+    id: "soneium",
+    name: "Soneium",
+    emoji: "🎮",
+    color: "#0070f3",
+    gradFrom: "#0070f3",
+    gradTo: "#0050cc",
+    type: "mainnet",
+    native: "ETH",
+    description: "Sony's L2 blockchain (OP Stack)",
+    explorer: "https://soneium.blockscout.com",
+    funding: "Sony",
+    reward: "$100-600",
+    probability: "High",
+    tags: ["evm", "l2", "op", "gaming", "entertainment"],
+    actions: [
+      { type: "bridge", emoji: "🌉", label: "Bridge", xp: 20, difficulty: "Easy", providers: [
+        { id: "soneium-bridge", name: "Soneium Bridge", url: "https://bridge.soneium.org", description: "Official bridge" },
+        { id: "relay-soneium", name: "Relay", url: "https://relay.link/bridge/soneium", description: "Fast bridge" },
+        { id: "superbridge-soneium", name: "Superbridge", url: "https://superbridge.app/soneium", description: "OP bridge" },
+      ]},
+      { type: "swap", emoji: "🔄", label: "Swap", xp: 15, difficulty: "Easy", providers: [
+        { id: "uniswap-soneium", name: "Uniswap", url: "https://app.uniswap.org", description: "Uniswap on Soneium" },
+        { id: "kyo-finance", name: "Kyo Finance", url: "https://app.kyo.finance/swap", description: "Soneium DEX" },
+      ]},
+      { type: "nft", emoji: "🎨", label: "NFT", xp: 15, difficulty: "Easy", providers: [
+        { id: "sonex", name: "Sonex", url: "https://sonex.io", description: "Soneium NFT" },
+        { id: "opensea-soneium", name: "OpenSea", url: "https://opensea.io", description: "NFT marketplace" },
+      ]},
+      { type: "deploy", emoji: "📝", label: "Deploy", xp: 40, difficulty: "Hard", providers: [
+        { id: "remix-soneium", name: "Remix IDE", url: "https://remix.ethereum.org", description: "Deploy contract" },
+      ]},
+    ],
+  },
 ];
